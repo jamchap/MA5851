@@ -1,14 +1,16 @@
 import numpy as np
 import regex as re
 import pandas as pd
-import nltk
-from nltk.corpus import stopwords
-nltk.download('stopwords', quiet=True)
-from nltk.stem import WordNetLemmatizer
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-nltk.download('vader_lexicon')
 import seaborn as sns
 import matplotlib.pyplot as plt
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
+nltk.download('stopwords', quiet=True)
+nltk.download('vader_lexicon', quiet=True)
+
 
 def google_scrape(xpath, driver):
     """
@@ -113,34 +115,12 @@ def movie_scores(lst_score):
     # Taking the reviews for only IMDb, Rotten Tomatoes and Metacritic
     # The other reviews have too much missing data
     df_scores = df_scores.loc[:, ['Title'
-                                 , 'Year'
-                                 , 'imdb_score'
-                                 , 'rotten_tom_score'
-                                 , 'metacritic_score']]
+                                     , 'Year'
+                                     , 'imdb_score'
+                                     , 'rotten_tom_score'
+                                     , 'metacritic_score']]
 
     return df_scores
-
-
-def movies_clean(df):
-    """
-    Function to clean the results of the google web scraping (non-scores)
-    :param df: DataFrame to clean
-    :return: Pandas DataFrame
-    """
-    df['google_use_like'] = df['Google_Users'].apply(lambda x: try_split_gs(x, '%', 0))
-    df['google_use_score'] = df['Google user ratings'].apply(lambda x: try_split_us(x))
-    df['google_use_n_rev'] = df['Google user ratings'].apply(lambda x: try_split_usrn(x))
-    df['movie_description'] = df['movie description'].apply(lambda x: try_split_md(x))
-
-    # Use new columns
-    df = df.loc[:, ['Title'
-                    , 'Year'
-                    , 'google_use_like'
-                    , 'google_use_score'
-                    , 'google_use_n_rev'
-                    , 'movie_description']]
-
-    return df
 
 
 # Data transformation
@@ -168,25 +148,7 @@ def rev_group_list(df, col, grp):
     return df_out
 
 
-def usa_pc(x):
-    """
-    Function to clean the USA (or Foreign) % result provided by Box Office Mojo
-    :param x: string to transform into float
-    :return: float (to be read as a percentage)
-    """
-    try:
-        if x == "<0.1%" or x == "-":
-            x = '0'
-        else:
-            x = re.sub('[%]', '', x)
-        pc = float(x) / 100
-        return pc
-
-    except:
-        return np.nan
-
-
-def clean_text(x, stop_words_lem = False):
+def clean_text(x, stop_words_lem=False):
     """
     Function to clean and normalise text
     :param x: text to clean
@@ -305,7 +267,7 @@ def freq_words_chart(x, terms, title):
     d = words_df.nlargest(columns="count", n=terms)
 
     # visualize words and frequencies
-    plt.figure(figsize=(7,8))
+    plt.figure(figsize=(7, 8))
     ax = sns.barplot(data=d, x="count", y="word")
     ax.set(ylabel='Word')
     ax.set(title=title)
