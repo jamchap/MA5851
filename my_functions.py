@@ -12,124 +12,13 @@ nltk.download('stopwords', quiet=True)
 nltk.download('vader_lexicon', quiet=True)
 
 
-def google_scrape(xpath, driver):
-    """
-    Function to web scrape HTML element from Google search result
-    :param xpath: xpath to scrape
-    :param driver: webdriver variable
-    :return: list of HTML elements
-    """
-    p = re.compile(r'>(.*?)<')
-    l = driver.find_element_by_xpath(xpath)
-    a = l.get_attribute('innerHTML')
-    a_2 = []
-
-    for i in p.findall(a):
-        if i.replace(" ", ""):
-            a_2.append(i)
-
-    return a_2
-
-
-# Cleaning functions
-def try_split_gs(x, delim, n):
-    """
-    Function to extract Google Users score from list
-    :param x: list item to transform
-    :param delim: delimiter (e.g. %)
-    :param n: position in list to extract
-    :return: float (should be read as a %)
-    """
-    try:
-        return float(x[0].split(delim)[n]) / 100
-    except:
-        return np.NaN
-
-
-def try_split_us(x):
-    """
-    Function for extracting the Google User Rating Score
-    :param x: list item to transform
-    :return: float (should be read as a %)
-    """
-    try:
-        return float(x[0]) / 5
-    except:
-        return np.NaN
-
-
-def try_split_usrn(x):
-    """
-    Function to extract the number of reviews from the Google User Ratings
-    :param x: list item to transform
-    :return: integer
-    """
-    try:
-        return int(x[1].split(' ')[0])
-    except:
-        return np.NaN
-
-
-def try_split_md(x):
-    """
-    Function to extract the movie description from the movie_description list
-    :param x: list item to transform
-    :return: string
-    """
-    try:
-        return x[1]
-    except:
-        return np.NaN
-
-
-def try_split(x, delim, n):
-    """
-    Function to extract text from list item
-    :param x: list to transform
-    :param delim: delimiter
-    :param n: position in list to extract
-    :return: string
-    """
-    try:
-        return x.split(delim)[n]
-    except:
-        return x
-
-
-# Clean results of web scraping
-def movie_scores(lst_score):
-    """
-    Function to transform and clean the movie scores from the web scraping
-    :param lst_score: list of scores to transform
-    :return: Pandas DataFrame
-    """
-    lst = []
-    for i in lst_score:
-        lst.append(i[0])
-
-    df_scores = pd.DataFrame(lst)
-    df_scores['imdb_score'] = df_scores['IMDb'].apply(lambda x: float(x.split('/')[0]) / float(x.split('/')[1]))
-    df_scores['rotten_tom_score'] = df_scores['Rotten Tomatoes'].apply(lambda x: float(try_split(x, '%', 0)) / 100)
-    df_scores['metacritic_score'] = df_scores['Metacritic'].apply(lambda x: float(try_split(x, '%', 0)) / 100)
-
-    # Taking the reviews for only IMDb, Rotten Tomatoes and Metacritic
-    # The other reviews have too much missing data
-    df_scores = df_scores.loc[:, ['Title'
-                                     , 'Year'
-                                     , 'imdb_score'
-                                     , 'rotten_tom_score'
-                                     , 'metacritic_score']]
-
-    return df_scores
-
-
 # Data transformation
 def rev_group_list(df, col, grp):
     """
     Function collapses multiple strings into a list of single values based on a group-by column
     :param df: dataframe to group
     :param col: column to group
-    :param grp: dataframe grouped at this level (i.e. ISBN)
+    :param grp: dataframe grouped at this level
     :return: list
     """
     # drop duplicate data
@@ -230,7 +119,6 @@ def sid_analyser(x, str_list=True):
     return x
 
 
-# NLP
 def sentiment_overall(x):
     """
     Function to provide an overall sentiment classification per (Hutto, n.d.)
@@ -250,7 +138,7 @@ def sentiment_overall(x):
     # Retrieved November 30, 2021, from https://github.com/cjhutto/vaderSentiment#about-the-scoring
 
 
-def freq_words_chart(x, terms, title):
+def freq_words_chart(x, terms, title, n=7, m=8):
     """
     Plot of the N (terms) most frequently used words in a corpus
     :param x: Data Frame column (corpus) to plot
@@ -267,7 +155,7 @@ def freq_words_chart(x, terms, title):
     d = words_df.nlargest(columns="count", n=terms)
 
     # visualize words and frequencies
-    plt.figure(figsize=(7, 8))
+    plt.figure(figsize=(n, m))
     ax = sns.barplot(data=d, x="count", y="word")
     ax.set(ylabel='Word')
     ax.set(title=title)
